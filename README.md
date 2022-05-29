@@ -9,3 +9,5 @@ My scientific hypothesis is:
 
 
 The Neuraminidase.txt contains the fasta file with all of the Neuraminidase protein sequences for the sequence alignments. The 6hg5.pdb and 2hu4.pdb files are for the protein files downloaded from PDB for the Structural Bioinformatics analysis. 
+
+The "BridgetSpencer_Project2CSubmission.pdf" file links to a pdf of the knitted R Notebook for this project. The "Project2C.Rmd" links to the R markdown file. 
