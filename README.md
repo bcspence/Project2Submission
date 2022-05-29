@@ -6,3 +6,6 @@ My scientific question is:
 
 My scientific hypothesis is:
 "If H5N1 and H5N6 infect humans at a higher rate than other H5 strains of Avian Influenza, then the sequence alignments and structure of the virus’ Neuraminidase protein will be more similar to each other than with other H5 strains."
+
+
+The Neuraminidase.txt contains the fasta file with all of the Neuraminidase protein sequences for the sequence alignments. The 6hg5.pdb and 2hu4.pdb files are for the protein files downloaded from PDB for the Structural Bioinformatics analysis. 
