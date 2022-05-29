@@ -1,0 +1,294 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+***
+## BIMM 143 Project 2 - Bridget Spencer
+***
+#### Scientific Question
+Can sequence and structural similarities of membrane proteins in the H5N6 and H5N1 strains of Avian Influenza explain increased prevalence and mortality in humans and birds when compared to other H5 strains?
+
+***
+
+#### Background Information
+For this project, I will be focusing on the neuraminidase (NA) protein in avian influenza, which is involved with releasing the virus and destroying the host receptor (CDC). Subtypes of avian influenza have been categorized based on the varying structures of the hemagglutinin surface glycoprotein (Ha et al, 2002), which is involved in allowing the virus to enter a host cell and cause infection (DuBois et al, 2011). These subtypes are further broken into different strains based on the structure of the Neuraminidase protein (CDC). Both the hemagglutinin and neuraminidase proteins face strong selective pressure as they are targets of the host immune system (Meyer, 2022). 
+
+While most avian influenza are classified as having low pathogenicity, the H5 subtype has two high pathogenicity strains which have infected human populations in recent years: H5N1 and H5N6 (CDC). For this project, the scientific hypothesis is focussed on the neuraminidase protein of these two strains to investigate whether structural or sequence similarities can explain the increased transmissibility and mortality rates that occur in humans with the H5N1 and H5N6 strains compared to other H5 strains. 
+
+DuBois et al, 2011: https://journals.asm.org/doi/10.1128/JVI.01412-10 
+
+Ha et al, 2002: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC125880/
+
+CDC: https://www.cdc.gov/flu/avianflu/influenza-a-virus-subtypes.htm  
+
+Meyer, Justin. “Influenza”. BIEB 152: Evolution of Infectious Diseases. 25 May 2022, University of California San Diego. Lecture.
+
+
+***
+
+#### Scientific Hypothesis
+Scientific Hypothesis: If H5N1 and H5N6 infect humans at a higher rate than other H5 strains of Avian Influenza, then the sequence alignments and structure of the virus’ Neuraminidase protein will be more similar to each other than with other H5 strains.
+
+***
+
+#### Downloading the Data and Conducting the Analyses 
+For this project, I downloaded the FASTA files of the Neuraminidase protein (NA) for nine strains of the H5 subtype of avian influenza: H5N1, H5N2, H5N3, H5N4, H5N5, H5N6, H5N7, H5N8, H5N9, all of which were collected from Mallard ducks, for consistency. I also downloaded the PDB files for the Neuraminidase protein isolated from an H5N1 (PDB ID: "2hu4") strain and an H5N6 (PDB ID: "6hg5") strain.
+
+I will conduct pairwise sequence alignment between H5N1 and all of the other strains, and H5N6 and all of the other strains. By analyzing these pairwise alignments, I will be able to directly compare how similar each strain is to each other, answering whether H5N1 and H5N6 do indeed have the most similar sequences when compared to the other strains. In addition, I will also complete multiple sequence alignment on all of the strains for further comparison on how the strains differ, and to use this in order to construct the phylogenetic tree. 
+
+In addition, I will look into structural bioinformatics of the Neuraminidase protein to compare the structures of the proteins in the subtypes known to infect humans. I will use the Bio3d structural bioinformatics package and Pymol to visualize these protein structures and see if significant differences are visible that could potentially explain the ability to be transmitted to humans. 
+
+For visualization methods, I plan to create a sequence logo and construct a phylogenetic tree. The sequence logo of the multiple sequence alignment will provide a way of visualizing where similarities between the H5N1 and H5N6 pair occurs, and where significant differences are present, helping to illustrate whether my hypothesis is correct or not. The relationships shown on the phylogenetic tree could help solidify the findings from the sequence alignment and structural analyses, potentially giving insight into whether the evolutionary histories of the strains could explain similarities of the protein and their transmissibility.
+
+***
+
+#### Necessary Packages
+muscle: this is a Bioconductor package specifically designed for aligning sequence of nucleotides or amino acids. It iterates calculations of the distances between sequences over and over again, ultimately arriving at the best alignment for the sequences. 
+
+msa: this is a Bioconductor package for doing multiple sequence alignment, and it actually contains the muscle package within it. It allows for more flexibility with the sequence alignment, including built-in functions that allow for the alignment to be put into formats more easily readable by other packages. 
+
+seqinr: seqinr is a package that contains a wide variety of functions for analyzing and visualizing data of nucleotide or amino acids sequences. For example, in this project I will be using seqinr in order to calculate the distances between the aligned sequences for the first bioinformatics method.
+
+Biostrings: Biostrings is a Bioconductor package for reading and analyzing strings of sequences. 
+
+bio3d: bio3d is a very useful package for performing all sorts of analysis and visualization of protein structures.  
+
+ape: ape is a package used for looking into evolutionary histories of sequences, such as plotting phylogenetic trees or calculating the distances between DNA sequences. 
+
+rgl: rgl, which I downloaded for use of the bio3d.view package, is used for modelling and visualizing 3D structures in R. 
+
+bio3d.view: bio3d.view is a package within bio3d that is used for visualizing the actual structures of proteins in R. 
+
+devtools: I used devtools for downloading the bio3d.view package within R. It is typically used for writing and developing packages, and as bio3d.view is currently still in development, its download is routed through the devtools package. 
+
+tinytex: tinytex is used for the TEXshade package, which is used for visualizing sequence alignments of amino acids or nucleotides. It is helpful for colouring and shading these alignments to best highlight conserved regions. 
+
+***
+
+### Multiple Sequence Alignment
+Multiple Sequence Alignment is a tool used for aligning multiple sequences of nucleotides or amino acids, which can then highlight conserved regions or regions with considerable variation. For multiple sequence alignment, a fasta file containing multiple sequences (of the Neuraminidase protein for influenza strains H1N1, H1N2, H1N3, H1N4, H1N5, H1N6, H1N7, H1N8, and H1N9) was downloaded from NCBI. 
+```{r}
+# We will use the "msa" package to complete multiple sequence alignment on the Neuraminidase sequences.
+library(msa)
+library(muscle)
+library(seqinr)
+library(Biostrings)
+
+# Here we are grabbing a set of fasta files for 9 Neuraminidase sequences that is on my desktop.
+file.paths <- system.file("extdata", "Neuraminidase.txt", package = "muscle")
+
+# Here we are specifying to read the sequences as amino acids with the "readAAStringSet" function from the Biostrings package. Alternatively, if using a DNA sequence, you could put "readDNAStringSet". This reads the amino acid sequences from the fasta file I downloaded above, and presents all of the unaligned sequences with the name of the viral strain to which the sequence belongs at right.  
+unalnd <- readAAStringSet("Neuraminidase.txt")
+unalnd
+
+# We can then perform multiple sequence alignment by calling "msa" on our unaligned sequences. Within the "msa" package, we can specify use of the "Muscle" package, which is specifically designed for completing multiple sequence alignments. 
+neuralnd <- msa(unalnd, "Muscle")
+# Finally, we can print the aligned sequences.
+neuralnd
+
+# We will use the "msaConvert" function within the "msa" package in order to convert the aligned sequences into a class recognizable by the seqinr package, as suggested from this website: https://bioconductor.riken.jp/packages/3.8/bioc/vignettes/msa/inst/doc/msa.pdf. 
+neuralnd2 <- msaConvert(neuralnd, type="seqinr::alignment")
+
+# Then we can create a distance matrix of the sequences to see how they vary from each other. We need to calculate the distances between all of the alignments, and this is accomplished with the "dist.alignment" function from the seqinr package. This function calculates the pairwise distance and then takes the square root, which is the number shown for each pair. https://www.rdocumentation.org/packages/seqinr/versions/4.2-8/topics/dist.alignment
+neurdistance <- dist.alignment(neuralnd2, "identity")
+
+# In order to view the comprehensive list of aligned sequences, we can convert this into a matrix with the "as.matrix" function. From this, we can best see how they differ; for example, we can see that H5N4 has the most similar (least different) sequence to H5N1, which suggests that our hypothesis is incorrect.
+H5distance <- as.matrix(neurdistance)
+H5distance
+
+```
+
+### Pairwise Sequence Alignment
+Pairwise Sequence Alignment involves aligning nucleotides or amino acids of two sequences in order to look into similar regions. A score is given based on how much gaps/mismatches in the sequences are weighted. For the Pairwise Sequence Alignment, the fasta file containing the 9 neuraminidase sequences from NCBI was split up so that each sequence was separate from the other. 
+
+**I've tried creating my own function here, as a loop that iterates the pairwise alignments for H5N1 against all of the other sequences. Unfortunately, although the loop returns no errors, it does not return the pairwise scores. So I have also manually set up the pairwise alignments for H5N1 and H5N6 against all of the other sequences in order to do the analysis.**
+```{r}
+#Load in the required packages
+library(Biostrings)
+
+# Read the amino acid sequences of each of the individual protein strains which were downloaded as FASTA files from NCBI. 
+H5N1 <- readAAStringSet("H5N1.txt")
+H5N2 <- readAAStringSet("H5N2.txt")
+H5N3 <- readAAStringSet("H5N3.txt")
+H5N4 <- readAAStringSet("H5N4.txt")
+H5N5 <- readAAStringSet("H5N5.txt")
+H5N6 <- readAAStringSet("H5N6.txt")
+H5N7 <- readAAStringSet("H5N7.txt")
+H5N8 <- readAAStringSet("H5N8.txt")
+H5N9 <- readAAStringSet("H5N9.txt")
+
+# Create a vector for the amino acid sequences of the strains:
+H5sequences <- c("H5N1", "H5N2", "H5N3", "H5N4", "H5N5", "H5N6", "H5N7", "H5N8", "H5N9")
+
+# Now we will use this vector to create a function that will do the pairwise sequence alignments by aligning H5N1 and H5N6 against all of the other sequences individually.
+do_pairwise_N1 <- function(H5sequences) { 
+  for (x in H5sequences) {
+    pairwiseAlignment(pattern = H5N1, subject = x, gapOpening = -2, gapExtension = 0)
+    print(pairwiseAlignment)
+  }
+}
+do_pairwise_N1
+
+
+do_pairwise_N6 <- function(H5sequences) { 
+  for (x in H5sequences) {
+    pairwiseAlignment(pattern = H5N6, subject = x, gapOpening = -2, gapExtension = 0)
+    print(pairwiseAlignment)
+  }
+}
+do_pairwise_N6
+
+
+
+# See comment in markdown above this section... loop has not worked, so here is the code/info for setting up the pairwise sequences manually. 
+# Now, we can use the Biostrings function "pairwiseAlignment" in order to complete our pairwise alignments and compute the alignment scores. The first sequence will be put in as the "pattern" argument and the second sequence as the "subject" argument. The information for this code was taken from the Bioconductor website: https://bioconductor.org/packages/devel/bioc/vignettes/Biostrings/inst/doc/PairwiseAlignments.pdf
+# For this function, we will be doing the default global alignment in order to compare the complete sequences, and will be using a scoring of -2 for penalizing a gap opening in the alignment. This value is somewhat arbitrary as we do not need specific values for this project; instead, we are more interested in comparing the sequence scores against each other and so we just need consistency within the scoring rubric. 
+
+# First, we will compare the H5N1 sequence against the other strains. 
+
+N1N2 <- pairwiseAlignment(pattern = H5N1, subject = H5N2, gapOpening = -2, gapExtension = 0)
+N1N2
+
+N1N3 <- pairwiseAlignment(pattern = H5N1, subject = H5N3, gapOpening = -2, gapExtension = 0)
+N1N3
+
+N1N4 <- pairwiseAlignment(pattern = H5N1, subject = H5N4, gapOpening = -2, gapExtension = 0)
+N1N4
+
+N1N5 <- pairwiseAlignment(pattern = H5N1, subject = H5N5, gapOpening = -2, gapExtension = 0)
+N1N5
+
+N1N6 <- pairwiseAlignment(pattern = H5N1, subject = H5N6, gapOpening = -2, gapExtension = 0)
+N1N6
+
+N1N7 <- pairwiseAlignment(pattern = H5N1, subject = H5N7, gapOpening = -2, gapExtension = 0)
+N1N7
+
+N1N8 <- pairwiseAlignment(pattern = H5N1, subject = H5N8, gapOpening = -2, gapExtension = 0)
+N1N8
+
+N1N9 <- pairwiseAlignment(pattern = H5N1, subject = H5N9, gapOpening = -2, gapExtension = 0)
+N1N9
+
+
+# Next, we will compare the H5N6 sequence against all of the strains. We won't compare H5N6 against H5N1 here since it was done above. 
+N6N2 <- pairwiseAlignment(pattern = H5N6, subject = H5N2, gapOpening = -2, gapExtension = 0)
+N6N2
+
+N6N3 <- pairwiseAlignment(pattern = H5N6, subject = H5N3, gapOpening = -2, gapExtension = 0)
+N6N3
+
+N6N4 <- pairwiseAlignment(pattern = H5N6, subject = H5N4, gapOpening = -2, gapExtension = 0)
+N6N4
+
+N6N5 <- pairwiseAlignment(pattern = H5N6, subject = H5N5, gapOpening = -2, gapExtension = 0)
+N6N5
+
+N6N7 <- pairwiseAlignment(pattern = H5N6, subject = H5N7, gapOpening = -2, gapExtension = 0)
+N6N7
+
+N6N8 <- pairwiseAlignment(pattern = H5N6, subject = H5N8, gapOpening = -2, gapExtension = 0)
+N6N8
+
+N6N9 <- pairwiseAlignment(pattern = H5N6, subject = H5N9, gapOpening = -2, gapExtension = 0)
+N6N9
+
+```
+
+***
+
+### Structural Bioinformatics
+Structural Bioinformatics allows one to visualize and analyze the 3D structures of target molecules, such as proteins for this project. A lot of different analysis can be completed to see where proteins differ, make geometric measurements of proteins, and align and superimpose proteins in order to highlight conserved regions. In order to visualize the structure of these proteins, two files from the Protein Data Bank (PDB) were downloaded. 
+```{r}
+# Load the package needed for structural analysis. rgl and devtools are needed for the download of the bio3d.view package. 
+library(bio3d)
+library(devtools)
+# Download the bio3d.view package through devtools in order to try to view the protein structures.
+# devtools::install_bitbucket("Grantlab/bio3d-view")
+library(bio3d.view)
+library(rgl)
+
+# Then we will read in the pdb files of the Neuraminidase protein for both the N1 and N6 strains using the 'read.pdb" function from the bio3d package. 
+N1protein <- read.pdb("2hu4.pdb")
+N6protein <- read.pdb("6hg5.pdb")
+N1protein
+N6protein
+
+# Here we will visualize the structure of the proteins, as described at this site: https://bioboot.github.io/bimm143_W20/class-material/lab-11-bimm143.pdf
+# Unfortunately, no image actually appeared, and instead r just produced the following message: "Computing connectivity from coordinates..." and stopped loading it. So I opened the files in PyMol and viewed them in there, attaching images in the markdown below. 
+view.pdb(N6protein, "overview", col="sse")
+view.pdb(N1protein, "overview", col="sse")
+
+```
+![N1 Neuraminidase](2HU4.png){width=35%}
+
+![N6 Neuraminidase](6Hg5.png){width=35%}
+```{r}
+# Now, following some code from Dr. Barry Grant ( https://bioboot.github.io/bimm143_W20/class-material/pdb_pca_labclass.html ), we can look at the schematic alignment of the Neuraminidase proteins from the N1 and N6 virus strains. 
+# Call the two proteins of interest from PDB and put them in a vector called "pdbid". 
+pdbid <- c("2hu4_A", "6hg5_A")
+# Download the files of the proteins and the relevant information, assigning the file information to the "pdbfiles" global variable.
+pdbfiles <- get.pdb(pdbid, path="pdbs", split=TRUE, gzip=TRUE)
+# Align the files of the proteins, assigning these aligned sequences to the global variables "pdbs".
+pdbs <- pdbaln(pdbfiles, fit = TRUE, exefile="msa")
+pdbs
+# In order to label the axis of the alignment figure, set the IDs as the names
+ids <- basename.pdb(pdbs$id)
+# Plot the alignment overview, with the PDB IDs as the labels.
+plot(pdbs, labels=ids)
+```
+
+
+***
+
+### Sequence Logo
+A sequence logo helps visualize conserved amino acid/nucleotide regions in multiple sequence alignments. They size the image of the amino acid/nucleotide in each position based on the frequency with which it appears at the position across all of the sequences. Larger letters that fill the whole column, for example, indicate that the same amino acid/nucleotide is used at that position for all/most of the sequences. 
+
+**Side Note - I'm not sure *why* the actual sequence logo won't print here. I've downloaded texshade as recommended in the documentation ( https://www.rdocumentation.org/packages/msa/versions/1.4.3/topics/msaPrettyPrint ) and put that in my directory, but the image still wouldn't appear. I then followed the instructions from this site ( https://tex.stackexchange.com/questions/10252/how-do-i-add-a-sty-file-to-my-mactex-texshop-installation ), and created a texmf folder in my mac Library, then the tex --> latex --> sty folders, and put the downloaded texshade folder in there, but unfortunately that has not helped either** 
+```{r}
+# Load in the package for completing sequence logos. 
+library(tinytex)
+# We will be using the "msaPrettyPrint" function within the "msa" package to create a sequence logo. I got the code from chapter 7 of this website: https://bioconductor.riken.jp/packages/3.8/bioc/vignettes/msa/inst/doc/msa.pdf
+# We are inputting our "neuralnd" alignment as the set of aligned sequences for the logo, specifying that the names of the sequences should be at left and that the sequence logo should appear above the sequences. I have selected for columns 4 through 24 to be displayed here, just for sake of brevity. The "asis" for the output indicates that the logo should be printed in R. 
+logo <- msaPrettyPrint(neuralnd, output = "asis", y=c(4, 24), showNames="left", showLogo="top", consensusColor="ColdHot", showLegend=FALSE, askForOverwrite=FALSE)
+logo
+
+```
+
+
+***
+
+### Phylogenetic Tree
+A phylogenetic tree plots sequences onto a tree that displays potential evolutionary relationships based on how similar/conserved the sequences are. The sequence name is displayed to the right of the image, and the branches and nodes to the left; nodes indicate where the last common ancestors of the strains were, and the branches indicate how much evolutionary time has theoretically passed. Sequences with a more recent last common ancestor would have diverged more recently and tend to be less distinct. 
+
+```{r}
+# Load the package needed for constructing a phylogenetic tree.
+library(ape)
+
+# From the distances calculated between the sequences for the multiple sequence alignment section ("neurdistance"), we can create a phylogenetic tree using the "nj" function from the "ape" package. This website helped with the code for this visualization method:  https://bioconductor.riken.jp/packages/3.8/bioc/vignettes/msa/inst/doc/msa.pdf 
+H5tree <- nj(neurdistance)
+# We can then use the "plot" function to create the tree from the "H5tree" variable. The "main=" parameter indicates what the title of the graph should be. 
+plot(H5tree, main="Phylogenetic Tree of H5 Influenza")
+
+
+```
+
+***
+
+#### Analysis of the Results 
+
+Based on the sequence alignments and phylogenetic tree, it would appear that my hypothesis is incorrect: the sequence alignments and structure of H5N1 and H5N6 are not most similar to each other when compared to other H5 strains of avian influenza.  
+
+The distance matrix from the multiple sequence alignment shows that the sequence alignment for the H5N1 strain is most similar to H5N4 (0.5841 difference), and the sequence alignment of H5N6 is most similar to H5N9 (0.5926 difference); H5N1 and H5N6 meanwhile have a difference of 0.7424 for each other. Along a similar vein, the Pairwise Sequence Alignment also agrees with this: H5N1 shares the greatest similarity with H5N4 (1141.121 similarity), while H5N6 shares the greatest sequence similarity with H5N9 (1038.868). H5N1 and H5N6 have a smaller similarity of 697.3094, for reference. 
+
+The phylogenetic tree also suggests that H5N1 is most closely related to H5N4, and that H5N6 is most closely related to H5N9. As similar sequences could be a result of having a more recent common ancestor, and with a lesser amount of time to diverge and gain more mutations and differences, this makes sense when considering the results from the sequence alignments. 
+
+When looking at the protein structure of Neuraminidase proteins from an N1 and an N6 strain in Pymol, the structures look very similar. The N1 Neuraminidase seems to have more bonds, shown as sticks, appearing along the outsides of the coils, and it also has large red molecules visible that are not seen in the N6 protein. Otherwise, the shapes of the two proteins are very similar.
+In addition, when looking at the Sequence Alignment Overview, we see that a lot of the residues are aligned (as shown by the grey), but the white bars indicate that gaps in the residue alignment are present. The amount of white in the upper red bar also indicates that the sequence conservation between the two proteins is not super high. Although the structural differences are not super noticeable, differences are still present, and so this is consistent with the findings from the sequence alignments that suggest that perhaps something else is responsible for the increased transmissibility of these two strains into humans. 
+
+Since my hypothesis is incorrect, there are other possibilities for why H5N1 and H5N6 seem to be better able to infect humans. It does not seem that the Neuraminidase is solely/at all responsible for dictating which species the influenza virus is able to infect, so perhaps the Hemagglutinin protein or Matrix-2 transmembrane protein determines this, for example. 
+The chance of a virus mutating and being able to infect humans could also occur at any point, and does not necessarily rely on the transmissible strains being very closely related. In fact, new strains can arise when infected animals are spending considerable time in close proximity to humans, allowing for a recombination of human and viral chromosomes (Meyer, 2022). 
+
+
+Meyer, Justin. “Influenza”. BIEB 152: Evolution of Infectious Diseases. 25 May 2022, University of California San Diego. Lecture.
+
