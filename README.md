@@ -1,4 +1,4 @@
-# Project2Submission
+# Project2CSubmission
 This is my submission for BIMM 143 Project 2C. 
 
 My scientific question is: 
